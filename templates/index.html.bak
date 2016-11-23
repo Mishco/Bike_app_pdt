@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Bicycle route</title>
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.26.0/mapbox-gl.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.26.0/mapbox-gl.css' rel='stylesheet' />
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:80%; }
+        #buttons {position: inherit;  float: right; left:0; width: 20%}
+    </style>
+    <style>
+    #marker {
+        background-image: url('http://turboram.hr/wp-content/uploads/2015/12/location.png');
+        background-size: cover;
+        width: 25px;
+        height: 25px;
+        border-radius: 100%;
+        cursor: pointer;
+    }
+
+    .mapboxgl-popup {
+        max-width: 200px;
+    }
+    input[type="range"] {
+       position: absolute;
+       top: 60%;
+       cursor: pointer;
+       width: 300px;
+    }
+
+    .slider {
+		height:300px;
+		width:9px;
+		margin:0 0 0 60px;
+	}
+
+	/* tweak drag handle position */
+	.handle {
+		top:0;
+		left:-10px;
+	}
+
+	/* position progressbar on the bottom edge */
+	.progress {
+		width:9px;
+		position:absolute;
+		bottom:0;
+	}
+    </style>
+
+    <script type="text/javascript" src="openMap.js"></script>
+    <script type="text/javascript">
+
+</script>
+</head>
+<!--<body onload="openShow()"> -->
+<body>
+
+
+<!--align="center" --->
+<div id="buttons" class="btn-group" >
+
+    <div class="jumbotron">
+            <h2>Bicycle route app</h2>
+            <p class="lead"></p>
+            <!--<p><a class="btn btn-lg btn-success" href="showSignUp" role="button">Sign up today</a>
+            </p>-->
+    </div>
+
+    <!--<button type="button" class="btn btn-primary">Show something</button>-->
+    <form action="." method="POST">
+        <input type="text" id="inputSearch" class="form-control" name="fname" required autofocus ><br>
+        <center>
+           <input type="submit" id="btnSend" class="btn btn-primary" value="Search">
+        </center>
+    </form>
+       <div class="row marketing" align="center">
+            <p>Position:</p>
+            <div id='infoLat' class="col-lg-6"></div>
+            <div id='infoLong' class="col-lg-6"> </div>
+      </div>
+<!--
+    <div class="show_bicycle_road">
+        <p>Distance of circle</p>
+        <input type="range" min="400" max="1000" step="1" value="500" />
+    </div>
+
+
+
+    <p>Set a new bicycle route</p>
+    <input type="text" id="commit" class="form-control" name="fnameRoute" required autofocus>
+    <input type="submit" id="btnSaveRoute" value="Save" class="btn btn-primary">
+-->
+<!--
+    <form action="." method="POST">
+        <input type="text" name="text">
+        <input type="submit" name="my-form" value="Send">
+    </form>
+-->
+
+
+
+    <!--<div class="checkbox">
+        <input name="checkbox" type="checkbox" id="checkbox" />Show Terrain info (contour)</br>
+        <input name="checkbox" type="checkbox" id="showCycle" />Show Bike trail
+    </div>
+    -->
+    <div class="container">
+      <h2>Bike Features</h2>
+      <!--First options show contour on map.<br> Second option show closest bike trail's.-->
+      <form>
+        <div class="checkbox">
+          <label><input name="checkbox" type="checkbox" id="checkbox" />Terrain info (contour)</label>
+        </div>
+        <div class="checkbox">
+          <label><input name="checkbox" type="checkbox" value="" id="checkbox2">Bike trail</label>
+        </div>
+        </form>
+    </div>
+</div>
+
+
+
+<div id='map'>
+    <!--
+<script>
+
+$(function() {
+
+  $(checkbox).click(function() {
+    if ($('#checkbox').is(':checked')) {
+      $('#appTimes').find('input').attr('disabled', true);
+        console.log("enable terrain info");
+        showFeaturesIntoMap();
+
+    } else {
+      $('#appTimes').find('input').removeAttr('disabled');
+        console.log("disable terrain info");
+        hideFeaturesFromMap();
+    }
+  });
+
+
+  $(checkbox2).click(function() {
+    if ($('#checkbox2').is(':checked')) {
+        console.log("enable bike trails");
+        getBikeTrails();
+
+    } else {
+        console.log("disable bike trails");
+
+    }
+  });
+
+
+});
+
+
+
+ </script>
+ -->
+
+  <script>
+
+
+  L.mapbox.accessToken = 'pk.eyJ1IjoibWlzaGNvcyIsImEiOiJjaXZkazR4eWgwMDQ2MnltcXBxaTJnanhkIn0.9ChoVM13d8b9YJRFtwJnkg';
+
+  var map = L.mapbox.map('map')
+    .setView([lat, lng], 8);
+
+var styleLayer = L.mapbox.styleLayer('mapbox://styles/mapbox/streets-v9')
+    .addTo(map)
+
+
+  </script>
+    </div>
+</body>
+</html>

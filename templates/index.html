@@ -1,0 +1,239 @@
+
+<html>
+<head>
+  <title>Bike App</title>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
+<link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet' />
+
+  <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+
+
+  <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="/resources/demos/style.css">
+   <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <!--Insert due to plugin driving directions-->
+    <script src='https://api.mapbox.com/mapbox.js/plugins/mapbox-directions.js/v0.4.0/mapbox.directions.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox.js/plugins/mapbox-directions.js/v0.4.0/mapbox.directions.css' type='text/css' />
+
+    <style>
+     body { margin:0; padding:0; }
+     #map { position:absolute; top:0; bottom:0; width:80%; }
+     #buttons {position: inherit;  float: right; left:0; width: 20%}
+
+     #marker {
+        background-image: url('http://turboram.hr/wp-content/uploads/2015/12/location.png');
+        background-size: cover;
+        width: 25px;
+        height: 25px;
+        border-radius: 100%;
+        cursor: pointer;
+    }
+
+    .mapboxgl-popup {
+        max-width: 200px;
+    }
+    input[type="range"] {
+       position: absolute;
+       top: 60%;
+       cursor: pointer;
+       width: 300px;
+    }
+
+    .slider {
+		height:300px;
+		width:9px;
+		margin:0 0 0 60px;
+	}
+
+	/* tweak drag handle position */
+	.handle {
+		top:0;
+		left:-10px;
+	}
+
+	/* position progressbar on the bottom edge */
+	.progress {
+		width:9px;
+		position:absolute;
+		bottom:0;
+	}
+
+    #custom-handle {
+    width: 2em;
+    height: 1.6em;
+    top: 50%;
+    margin-top: -.8em;
+    text-align: center;
+    line-height: 1.6em;
+    }
+
+    .fragment {
+    font-size: 12px;
+    font-family: tahoma;
+    height: 140px;
+    border: 1px solid #ccc;
+    color: #FF4500;
+    display: block;
+    padding: 10px;
+    box-sizing: border-box;
+    text-decoration: none;
+    }
+  </style>
+
+
+<script type="text/javascript" src="openMap.js"></script>
+
+</head>
+<body onload="openShow2()">
+ <style>
+#inputs,
+#errors,
+#directions {
+    position: absolute;
+    width: 33.3333%;
+    max-width: 300px;
+    min-width: 200px;
+}
+
+#inputs {
+    z-index: 10;
+    top: 10px;
+    left: 10px;
+}
+
+#directions {
+    z-index: 99;
+    background: rgba(0,0,0,.8);
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+}
+
+#errors {
+    z-index: 8;
+    opacity: 0;
+    padding: 10px;
+    border-radius: 0 0 3px 3px;
+    background: rgba(0,0,0,.25);
+    top: 90px;
+    left: 10px;
+}
+
+</style>
+
+
+
+<div id="buttons" class="btn-group" >
+
+    <div class="jumbotron">
+            <h2>Bicycle route app</h2>
+            <p class="lead"></p>
+            <!--<p><a class="btn btn-lg btn-success" href="showSignUp" role="button">Sign up today</a>
+            </p>-->
+    </div>
+
+    <!--<button type="button" class="btn btn-primary">Show something</button>-->
+    <form action="." method="POST">
+        <input type="text" id="inputSearch" class="form-control" name="fname" required autofocus ><br>
+        <center>
+           <input type="submit" id="btnSend" class="btn btn-primary" value="Search"> <br><br>
+
+           <input id="btnBike" class="btn btn-primary btn-sm" value="Distance">
+           <input id="btnRoute" class="btn btn-success btn-sm" value="My route">
+        </center>
+    </form>
+
+    <div id="slider">
+      <div id="custom-handle" class="ui-slider-handle"></div>
+    </div>
+
+
+    <div class="container">
+      <h2>Bike Features</h2>
+      <!--First options show contour on map.<br> Second option show closest bike trail's.-->
+      <form>
+        <div class="checkbox">
+          <label><input name="checkbox" type="checkbox" id="checkbox" />Terrain info (contour)</label>
+        </div>
+        <div class="checkbox">
+          <label><input name="checkbox" type="checkbox" value="" id="checkbox2">Bike trail</label>
+        </div>
+        </form>
+    </div>
+
+
+
+
+
+      <div align="center" id="infoLat">
+        <!--<p>Marker Position:</p>
+        <div id='infoLat' class="col-lg-6"></div>
+        <div id='infoLong' class="col-lg-6"> </div>-->
+      </div>
+
+       <div align="center" id="infoLatMouse">
+            <!--<p>Mouse Position:</p>
+            <div id='infoLatMouse' class="col-lg-6"></div>
+            <div id='infoLongMouse' class="col-lg-6"> </div>-->
+      </div>
+
+
+
+</div>
+<div id="map"></div>
+<div id='inputs'></div>
+<div id='errors'></div>
+<div id='directions'>
+  <div id='routes'></div>
+  <div id='instructions'> </div>
+    <a class="fragment">
+        <div>
+            <span id='close'>X</span>
+        </div>
+    </a>
+</div>
+<script>
+
+
+$(function() {
+  $(checkbox).click(function() {
+    if ($('#checkbox').is(':checked')) {
+      $('#appTimes').find('input').attr('disabled', true);
+        console.log("enable terrain info");
+        showFeaturesIntoMap();
+    } else {
+      $('#appTimes').find('input').removeAttr('disabled');
+        console.log("disable terrain info");
+        hideFeaturesFromMap();
+    }
+  });
+});
+
+$( function() {
+    var handle = $( "#custom-handle" );
+    $( "#slider" ).slider({
+      min: 1,
+      max: 700,
+      value: 10,
+      create: function() {
+        handle.text( $( this ).slider( "value" ) );
+      },
+      slide: function( event, ui ) {
+        handle.text( ui.value );
+      }
+    });
+  } );
+
+</script>
+</body>
+</html>
