@@ -183,6 +183,17 @@ function openShow() {
 
 
 //} // end of function openShow()
+
+function cycle(markers) {
+    var i = 0;
+    function run() {
+        if (++i > markers.length - 1) i = 0;
+        map.setView(markers[i].getLatLng(), 12);
+        markers[i].openPopup();
+        window.setTimeout(run, 3000);
+    }
+    run();
+}
 var my_position;
 var directions;
 function openShow2() {
@@ -210,9 +221,83 @@ function openShow2() {
   var gjsonLayer = L.mapbox.featureLayer().addTo(map);
         gjsonLayer.loadID('mapbox.dark');
 
+  var ResultGjsonLayer = L.mapbox.featureLayer()
+  .on('ready',function(e) {
+        //map.fitBounds(ResultGjsonLayer.getBounds());
+        //map.setView([lat,lng],14);
+
+        var markers = [];
+        this.eachLayer(function(marker) {
+            marker.bindPopup("<p>" + marker.feature.properties.f2 + "</p>");
+            var place = marker.feature.properties.f4;
+            // marker for amenity = 'bicycle rental'
+            var amenity = marker.feature.properties.f3;
+            if(amenity =='bicycle_rental')
+            {
+
+                marker.setIcon(L.icon({
+                    className: 'my-icon icon-sf', // class name to style
+                    html: '&#9733;', // add content inside the marker
+                }));
+
+                marker.setIcon(L.mapbox.marker.icon({
+                            'marker-color': '#BA1A1A',
+                            'marker-symbol': "bicycle",
+                            'description': "city or town"
+                }));
+
+//                marker.setIcon(L.mapbox.marker.icon({
+//                            'marker-color': '#1E90FF',
+//                            'description': "city or town",
+//                            icon:'icon github'
+//                }));
+
+                //stop show other markers
+            }
+            // marker for cities
+            if (place == 'city' || place =='town' )
+            {
+                marker.setIcon(L.mapbox.marker.icon({
+                            'marker-color': '#BA1A1A',
+                            'marker-symbol': "city",
+                            'description': "city or town"
+                }));
+            }
+            // marker for suburb and village
+            if(place =='suburb' || place == 'village')
+            {
+                marker.setIcon(L.mapbox.marker.icon({
+                            'marker-color': '#D2691E',
+                            'marker-symbol': "village",
+                            'description': "village"
+                }));
+            }
+            markers.push(marker);
+        });
+        // cycle(markers);
+        i=0
+        map.setView(markers[i].getLatLng(), 12);
+        markers[i].openPopup();
+
+
+        // Add each marker point to the heatmap.
+        ResultGjsonLayer.eachLayer(function(e) {
+            // ResultGjsonLayer.addLatLng(e.getLatLng());
+            // map.setView([e.latLng.lat, e.latLng.lng], 14);
+        });
+  })
+  .addTo(map);
+
+  //heat = L.heatLayer([], { maxZoom: 12 }).addTo(map);
+
+
+
+
    my_position = L.marker([lat,lng], {
     icon: current_location_icon
   }).addTo(map);
+
+
 
   // on load
   $("#infoLat").html("Marker position: LatLng(" + (Math.round(lat)*10000 / 10000) + ", " + (Math.round(lng)*10000 / 10000));
@@ -240,30 +325,70 @@ function openShow2() {
 	"Toner": layerToner
   };
 
-
   $(document).on('input change', '#slider', function() {
         $('#slider_value').html( $(this).val() );
+  });
+
+  $("#btnSend").click(function(event){
+    event.preventDefault();
+    var searchText = $("#inputSearch").val();
+    console.log(searchText)
+    ResultGjsonLayer.loadURL('/map/search?string='+$("#inputSearch").val() + '&lat=' + lat + '&lng=' + lng);
   });
 
   $("#btnBike").click(function(event) {
     event.preventDefault();
     gjsonLayer.loadURL('/map/close_place?distance='+ $("#custom-handle").html() + '&lat=' + lat + '&lng=' + lng);
+    gjsonLayer.loadURL('/map/rental?distance='+ $("#custom-handle").html() + '&lat=' + lat + '&lng=' + lng);
   });
+
 
   $("#btnRoute").click(function(event) {
     event.preventDefault();
     addMyRoute();
-//    change name of button
+    //  change name of button
     $("btnRoute").attr("value", "OFF");
+    map.zoomControl.remove();
   });
 
   $(checkbox2).click(function() {
     if ($('#checkbox2').is(':checked')) {
         console.log("enable bike trails");
-
         var res = gjsonLayer.loadURL('/bike1');
     }else {
+        /// TO DO
+          /// second click...
+        ///
+    }
+  });
+  var featureGroup;
+  var drawControl;
 
+  $(drawing).click(function()
+  {
+    if($('#drawing').is(':checked'))
+    {
+      console.log("Enable drawing");
+      featureGroup = L.featureGroup().addTo(map);
+
+      drawControl = new L.Control.Draw({
+        edit: {
+        featureGroup: featureGroup
+        }
+      }).addTo(map);
+
+      map.on('draw:created', function(e) {
+          featureGroup.addLayer(e.layer);
+      });
+    }
+    else
+    {
+       // hide drawing control
+       console.log("Hide drawing")
+
+       // remove layer and controller
+       map.removeLayer(featureGroup);
+       map.removeControl(drawControl);
     }
   });
 
@@ -274,38 +399,30 @@ function openShow2() {
         $('#errors').hide();
         $('#routes').hide();
         $('#instructions').hide();
+        // add
+        L.zoomControl.addTo(map);
     });
+    // move the attribution control out of the way
+    map.attributionControl.setPosition('bottomleft');
 
+    // create the initial directions object, from which the layer
+    // and inputs will pull data.
+    directions = L.mapbox.directions();
 
-
-// move the attribution control out of the way
-map.attributionControl.setPosition('bottomleft');
-
-// create the initial directions object, from which the layer
-// and inputs will pull data.
- directions = L.mapbox.directions();
-
-
-
-var directionsInputControl = L.mapbox.directions.inputControl('inputs', directions)
+    var directionsInputControl = L.mapbox.directions.inputControl('inputs', directions)
+    .addTo(map);
+    var directionsErrorsControl = L.mapbox.directions.errorsControl('errors', directions)
+    .addTo(map);
+    var directionsRoutesControl = L.mapbox.directions.routesControl('routes', directions)
+    .addTo(map);
+    var directionsInstructionsControl = L.mapbox.directions.instructionsControl('instructions', directions)
     .addTo(map);
 
-var directionsErrorsControl = L.mapbox.directions.errorsControl('errors', directions)
-    .addTo(map);
-
-var directionsRoutesControl = L.mapbox.directions.routesControl('routes', directions)
-    .addTo(map);
-
-var directionsInstructionsControl = L.mapbox.directions.instructionsControl('instructions', directions)
-    .addTo(map);
-
-  $('#directions').hide();
+    $('#directions').hide();
     $('#inputs').hide();
     $('#errors').hide();
     $('#routes').hide();
     $('#instructions').hide();
-
-
 //
 //  $("#find_sports").click(function(event) {
 //    event.preventDefault();
@@ -315,13 +432,10 @@ var directionsInstructionsControl = L.mapbox.directions.instructionsControl('ins
 }
 
 function addMyRoute() {
-
-
-
     var directionsLayer = L.mapbox.directions.layer(directions)
         .addTo(map);
 
-     // temporary remove marker
+    // temporary remove marker
     map.removeLayer(my_position);
 
     $('#directions').show();

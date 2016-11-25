@@ -11,7 +11,9 @@ def get_connection():
         except:
             print("I am unable to connect to the database")
 
-    _db_cur = _connection.cursor()
+    # old settings
+    #_db_cur = _connection.cursor()
+    _db_cur = _connection.cursor(cursor_factory = psycopg2.extras.DictCursor)
     return _db_cur
 
 # List of stuff accessible to importers of this module. Just in case

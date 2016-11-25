@@ -6,7 +6,7 @@ from flask import Flask, render_template
 from flask import request,redirect, Response
 from flask import jsonify
 import db
-import math
+from geojson import Feature, Point, FeatureCollection
 
 #  Bike application
 #
@@ -50,16 +50,19 @@ app = Flask(__name__)
 def api_hello():
     # gjsonLayer.loadURL('/map/close_place?distance='+ $("#custom-handle").html + '&lat=' + lat + '&lng=' + lng);
     cur = db.get_connection()
-    distance = request.args.get('distance')
+    _distance = request.args.get('distance')
     lat = request.args.get('lat')
     lng = request.args.get('lng')
     print(lat, lng)
     # lat = lat[:-8]
     # lng = lng[:-8]
     print(lat, lng)
-
+    # km
+    # 6371
+    distance = int(float(_distance))*1000000
+    print(distance)
     #cur.execute("SELECT row_to_json(fc) FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type , ST_AsGeoJSON(ST_Transform(way,4326))::json As geometry, row_to_json((osm_id,name,(SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(17 48)',4326),4326),ST_Transform(ST_GeomFromText(ST_AsText(way) ,4326),4326))))) As properties FROM osm_point  limit 100  ) As f limit 100 )  As fc; ")
-    cur.execute("SELECT row_to_json(fc) FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type , ST_AsGeoJSON(ST_Transform(way,4326))::json As geometry, row_to_json((osm_id,name,(SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" +lng + " " + lat + ")',4326),4326),ST_Transform(ST_GeomFromText(ST_AsText(way) ,4326),4326))))) As properties FROM osm_roads where osm_roads.bicycle = 'yes'  and (SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" + lng + " " + lat + ")',4326),4326),ST_Transform(ST_GeomFromText(ST_AsText(way) ,4326),4326))) < "+distance+"  ) As f  )  As fc; ")
+    cur.execute("SELECT row_to_json(fc) FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type , ST_AsGeoJSON(ST_Transform(way,4326))::json As geometry, row_to_json((osm_id,name,(SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" +str(lng) + " " + str(lat) + ")',4326),4326),ST_Transform(ST_GeomFromText(ST_AsText(way) ,4326),4326))))) As properties FROM osm_roads where osm_roads.bicycle = 'yes'  and (SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" + str(lng) + " " + str(lat) + ")',4326),4326),ST_Transform(ST_GeomFromText(ST_AsText(way) ,4326),4326))) < "+str(distance)+"  ) As f  )  As fc; ")
     rows = cur.fetchall()
     print(rows)
     json_string = json.dumps(rows)
@@ -83,15 +86,6 @@ def connectionToDbs():
     print(dbg + "Succesfull connect into dbs")
     return cur
 ##########################################################################################
-def testSelectFromDbs(cur):
-    cur.execute("""select * from osm_polygon limit 10""")
-    rows = cur.fetchall()
-    print (dbg + "Show me the osm_polygon:")
-    for row in rows:
-        #print("   ", row[0], " ", row[15])
-        print(" ", row[0], " ", row['building'])
-
-##########################################################################################
 # not using
 def testInsertIntoDBS(cur):
     namedict = ({"first_name": "Joshua", "last_name": "Drake"},
@@ -101,12 +95,31 @@ def testInsertIntoDBS(cur):
 
 
 ##########################################################################################
+@app.route('/map/rental', methods=['GET'])
 def getBicycleRental():
+    # 0.1 degree       | 11.1 km
+
+    _distance = int(float(request.args.get('distance')))*1000
+    lat = request.args.get('lat')
+    lng = request.args.get('lng')
     cur = db.get_connection()
-    cur.execute("Select amenity, name,  ST_AsGeoJSON(ST_Transform(way,4326)) FROM osm_point WHERE amenity = 'bicycle_rental' AND name IS NOT NULL limit 50")
+
+    cur.execute("SELECT row_to_json(fc) FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type , ST_AsGeoJSON(ST_Transform(way,4326))::json AS geometry , row_to_json((osm_id,name,amenity,(SELECT ST_Distance( 	ST_Transform(ST_GeomFromText('POINT(" + str(lng) + " " + str(lat) + ")',4326),26986), 	ST_Transform(way,26986) )))) As properties FROM osm_point where amenity like 'bicycle_rental' and (SELECT ST_Distance(	ST_Transform(ST_GeomFromText('POINT(" + str(lng) + " " + str(lat) + ")',4326),26986),	ST_Transform(way,26986)) < "+str(_distance)+"))  As f ) As fc;")
+
+    #cur.execute("SELECT row_to_json(fc)FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type, ST_AsGeoJSON(way)::json, row_to_json((osm_id,name,amenity,(SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" + str(lng) + " " + str(lat) + ")',4326),26986),ST_Transform(way,26986))))) As properties FROM osm_point where amenity like 'restaurant' order by (SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" + str(lng) + " " + str(lat) + ")',4326),26986),ST_Transform(way,26986))) < "+str(_distance)+") As f ) As fc;")
+
+    #cur.execute("SELECT row_to_json(fc) FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type , ST_AsGeoJSON(way)::json As geometry, row_to_json((osm_id,name,"'"addr:housename"'","'"addr:housenumber"'",amenity,(SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" + str(lng) + " " + str(lat) + ")',4326),32647),ST_Transform(ST_GeomFromText(ST_AsText(way) ,4326),32647 ))))) As properties FROM osm_point where (amenity like 'restaurant' or amenity like 'pub') and (SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" + str(lng) + " " + str(lat) + ")',4326),32647 ),ST_Transform(ST_GeomFromText(ST_AsText(way) ,4326),32647 ))) < "+str(_distance)+"  order by (SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" + str(lng) + " " + str(lat) + ")',4326),32647 ),ST_Transform(ST_GeomFromText(ST_AsText(way) ,4326),32647 ))) ) As f )  As fc; ")
+    #cur.execute(
+    #    " SELECT row_to_json(fc) FROM ( SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features FROM (SELECT 'Feature' As type , ST_AsGeoJSON(ST_Transform(BR.way,4326))::json As geometry, row_to_json((osm_id,name,(SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" + str(lng) + " " + str(lat) + ")',4326),4326),ST_Transform(ST_GeomFromText(ST_AsText(way) ,4326),4326))))) As properties FROM (Select * FROM osm_point WHERE amenity = 'bicycle_rental') as BR   where (SELECT ST_Distance(ST_Transform(ST_GeomFromText('POINT(" + str(lng) + " " + str(lat) + ")',4326),4326),ST_Transform(ST_GeomFromText(ST_AsText(way) ,4326),4326))) < "+str(_distance)+"   ) As f  )  As fc; ")
     rows = cur.fetchall()
-    for row in rows:
-        print(" ", row[0], " ", row[1], " ", row[2])
+    json_string = json.dumps(rows)
+    print(dbg + json_string)
+    fixed = json_string[2:]
+    fixed = fixed[:-2]
+    print(dbg + fixed)
+    print(dbg + "rows was sent")
+    return fixed
+
 
 ##########################################################################################
 @app.route('/bike1', methods=['GET'])
@@ -151,6 +164,32 @@ def getClosestBicycleWay():
     #return jsonify(result=getBikeTrails(**request.args))
 
 
+@app.route('/map/search', methods=['GET'])
+def searchByName():
+    cur = db.get_connection()
+    search_name = request.args.get('string')
+    lng = request.args.get('lng')
+    lat = request.args.get('lat')
+
+    #    cur.execute("select * from osm_point where leisure is not null or amenity = 'bicycle_rental' and to_tsvector('sk', name) @@ to_tsquery('sk', '" + search_name + "');")
+    cur.execute("SELECT row_to_json(fc) FROM (	SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features	FROM (		SELECT 'Feature' As type , ST_AsGeoJSON(ST_Transform(way,4326))::json As geometry, row_to_json((			osm_id,name,amenity, place,(			SELECT ST_Distance(			ST_Transform(ST_GeomFromText('POINT(" + lng + " " + lat + ")',4326),26986),			ST_Transform(way, 26986)			)			))) As properties		FROM (			SELECT ts_rank_cd(to_tsvector('sk', name ), to_tsquery('sk', '"+search_name+"')) rank, * from osm_point			where (amenity like 'bicycle_rental' or place like 'town' or place like 'city' or place like 'village' or place like 'suburb')  and to_tsvector('sk', name ) @@ to_tsquery('sk', '"+search_name+"')			order by rank desc) as foo 		order by (		SELECT ST_Distance(		ST_Transform(ST_GeomFromText('POINT(" + lng + " " + lat + ")',4326),26986),		ST_Transform(way ,26986)))  ) As f )  As fc;")
+
+    rows = cur.fetchall()
+    # for row in rows:
+    #    print(" ", row['way'], " ", row['name'], " ")
+
+    # result = cur.fetchone()
+    # print(result['way'])
+    # my_feature = Feature(geometry=Point(result['way']))
+    # print(my_feature)
+    # featuresCollection = FeatureCollection([my_feature])
+    # print(featuresCollection)
+
+    json_string = json.dumps(rows)
+    fixed = json_string[2:]
+    fixed = fixed[:-2]
+    print(fixed)
+    return fixed
 ##########################################################################################
 #                                    main function                                       #
 ##########################################################################################
