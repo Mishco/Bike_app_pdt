@@ -196,6 +196,7 @@ function cycle(markers) {
 }
 var my_position;
 var directions;
+var directionsLayer;
 function openShow2() {
 
 //  L.mapbox.accessToken = 'pk.eyJ1IjoicGEzayIsImEiOiJjaXR4ZzVuNnkwMDQ1MnNuMjQzZXh2N2w2In0.dju67E08KTofwOCQqYKPbA';
@@ -218,8 +219,24 @@ function openShow2() {
   var styleLayer = L.mapbox.styleLayer('mapbox://styles/mapbox/streets-v9')
       .addTo(map);
 
-  var gjsonLayer = L.mapbox.featureLayer().addTo(map);
-        gjsonLayer.loadID('mapbox.dark');
+  var gjsonLayer = L.mapbox.featureLayer()
+  .on('ready', function(e) {
+       var markers = [];
+       this.eachLayer(function(marker) {
+           marker.bindPopup("<p>" + marker.feature.properties.f3 + "</p>");
+           marker.setIcon(L.mapbox.marker.icon({
+                            'marker-color': '#000FFF',
+                            'marker-symbol': "bicycle",
+                            'description': "city or town"
+            }));
+
+        markers.push(marker);
+        })
+
+  }).addTo(map);
+  //gjsonLayer.loadID('mapbox.dark');
+
+
 
   var ResultGjsonLayer = L.mapbox.featureLayer()
   .on('ready',function(e) {
@@ -235,13 +252,10 @@ function openShow2() {
             if(amenity =='bicycle_rental')
             {
 
-                marker.setIcon(L.icon({
-                    className: 'my-icon icon-sf', // class name to style
-                    html: '&#9733;', // add content inside the marker
-                }));
+
 
                 marker.setIcon(L.mapbox.marker.icon({
-                            'marker-color': '#BA1A1A',
+                            'marker-color': '#0000FF',
                             'marker-symbol': "bicycle",
                             'description': "city or town"
                 }));
@@ -423,16 +437,26 @@ function openShow2() {
     $('#errors').hide();
     $('#routes').hide();
     $('#instructions').hide();
-//
-//  $("#find_sports").click(function(event) {
-//    event.preventDefault();
-//    gjsonLayer.loadURL('/map/one_sport?sport='+ $("#sports").val());
-//  });
+
+  $("#saveRoute").click(function(event) {
+    event.preventDefault();
+    // save into db
+    var res = $('#directions').html();
+    console.log(res);
+
+    var details = $('#directions').find('.mapbox-directions-route-details').val();
+    console.log(details);
+
+    var directions_geojson = directionsLayer.toGeoJSON();
+    console.log(directions_geojson);
+    
+    gjsonLayer.loadURL('/map/save_route?geojson='+ JSON.stringify(directions_geojson));
+  });
 
 }
 
 function addMyRoute() {
-    var directionsLayer = L.mapbox.directions.layer(directions)
+    directionsLayer = L.mapbox.directions.layer(directions)
         .addTo(map);
 
     // temporary remove marker
@@ -484,17 +508,17 @@ function getBikeTrails() {
 
     getBikeTrails
 
-//    console.log("receive data from db");
-//    var xhr = ("XMLHttpRequest" in window) ? new XMLHttpRequest() : new ActiveXObject("Msxml3.XMLHTTP");
-//    xhr.open("GET", 'http://127.0.0.1:5000/bike1', true);
-//    xhr.onreadystatechange = function() {
-//    if (xhr.readyState === 4)  {
-//        var serverResponse = xhr.responseText;
-//
-//        processingBikeTrails(xhr.responseText)
-//      }
-//    };
-//    xhr.send(null);
+    console.log("receive data from db");
+    var xhr = ("XMLHttpRequest" in window) ? new XMLHttpRequest() : new ActiveXObject("Msxml3.XMLHTTP");
+    xhr.open("GET", 'http://127.0.0.1:5000/bike1', true);
+    xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4)  {
+        var serverResponse = xhr.responseText;
+
+        processingBikeTrails(xhr.responseText)
+      }
+    };
+    xhr.send(null);
 }
 
 function processingBikeTrails(theRouteJsonText) {

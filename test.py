@@ -190,6 +190,20 @@ def searchByName():
     fixed = fixed[:-2]
     print(fixed)
     return fixed
+
+
+@app.route('/map/save_route', methods=['GET'])
+def saveRoute():
+    cur = db.get_connection()
+    geojson = request.args.get('geojson')
+    print(str(geojson))
+    tmp = json.loads(geojson)
+    print(tmp)
+    cur.execute("SELECT ST_AsText(ST_Collect(ST_GeomFromGeoJSON(feat->>'geometry'))) FROM (  SELECT json_array_elements("+ str(geojson) +"::json->'features') AS feat) AS f;")
+
+    rows = cur.fetchall()
+    for row in rows:
+        print(" ", row['way'], " ", row['name'], " ")
 ##########################################################################################
 #                                    main function                                       #
 ##########################################################################################
