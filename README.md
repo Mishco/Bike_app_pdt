@@ -15,8 +15,6 @@ Build a map-based application, which lets the user see geo-based data on a map a
 
 ## Bike app
 
-Fill in (either in English, or in Slovak):
-
 **Application description**: `
   - Zobrazenie požičovne bicyklov v zadanej vzdialenosti od aktuálnej pozície používateľa.
   - Zobrazenie cyklochodníkov v určenej ploche. `
