@@ -7,3 +7,21 @@ Build a map-based application, which lets the user see geo-based data on a map a
 2. Local server with [PostGIS](http://postgis.net/) and an API layer that exposes data in a [geojson format](http://geojson.org/).
 3. The user-facing application (web, android, ios, your choice..) which calls the API and lets the user see and navigate in the map and shows the geodata. You can (and should) use existing components, such as the Mapbox SDK, or [Leaflet](http://leafletjs.com/).
 
+
+## Data sources
+
+- [Open Street Maps](https://www.openstreetmap.org/)
+- [Slovakia](http://www.freemap.sk/index.php?c=core.download&filename=/slovakia.osm)
+
+## Bike app
+
+Fill in (either in English, or in Slovak):
+
+**Application description**: `
+  - Zobrazenie požičovne bicyklov v zadanej vzdialenosti od aktuálnej pozície používateľa.
+  - Zobrazenie cyklochodníkov v určenej ploche. `
+  - Vytvaranie vlastnych tras.
+  - Full textove vyhladavanie na mape.
+  
+
+**Technologies used**: `flask, python, jQuery, postGis
